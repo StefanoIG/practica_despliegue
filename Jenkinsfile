@@ -2,13 +2,19 @@ pipeline {
     agent any
 
     tools {
-        nodejs "Node25" // Configura una instalación de Node.js en Jenkins
-        dockerTool 'Dockertool'  // Cambia el nombre de la herramienta según tu configuración en Jenkins
+        nodejs "Node25"
+        dockerTool 'Dockertool'
     }
 
     stages {
         stage('Construir Imagen Docker') {
             steps {
+                script {
+                    // Usar la ruta completa de docker
+                    def dockerPath = tool name: 'Dockertool', type: 'org.jenkinsci.plugins.docker.commons.tools.DockerTool'
+                    env.PATH = "${dockerPath}:${env.PATH}"
+                }
+                sh 'docker --version'
                 sh 'docker build -t hola-mundo-node:latest .'
             }
         }

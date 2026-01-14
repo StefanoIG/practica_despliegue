@@ -6,6 +6,23 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Verificar archivos') {
+            steps {
+                sh '''
+                    echo "Contenido del workspace:"
+                    ls -la
+                    echo "Verificando package.json:"
+                    cat package.json || echo "package.json no encontrado"
+                '''
+            }
+        }
+
         stage('Instalar dependencias') {
             steps {
                 script {
@@ -13,7 +30,7 @@ pipeline {
                     env.PATH = "${dockerPath}:${env.PATH}"
                 }
                 sh '''
-                    docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine npm install
+                    docker run --rm -v ${WORKSPACE}:/app -w /app node:25-alpine npm install
                 '''
             }
         }
@@ -21,7 +38,7 @@ pipeline {
         stage('Ejecutar tests') {
             steps {
                 sh '''
-                    docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine npm test
+                    docker run --rm -v ${WORKSPACE}:/app -w /app node:25-alpine npm test
                 '''
             }
         }
@@ -50,6 +67,15 @@ pipeline {
                     docker run -d --name hola-mundo-node -p 3000:3000 hola-mundo-node:latest
                 '''
             }
+        }
+    }
+
+    post {
+        failure {
+            echo 'El pipeline ha fallado. Revisa los logs para más detalles.'
+        }
+        success {
+            echo 'Pipeline ejecutado exitosamente!'
         }
     }
 }

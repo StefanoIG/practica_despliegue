@@ -7,7 +7,23 @@ pipeline {
     }
 
     stages {
+        stage('Instalar dependencias') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Ejecutar tests') {
+            steps {
+                sh 'chmod +x ./node_modules/.bin/jest'  // Soluciona el problema de permisos
+                sh 'npm test -- --ci --runInBand'
+            }
+        }
+
         stage('Construir Imagen Docker') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
                 script {
                     // Usar la ruta completa de docker
@@ -20,6 +36,9 @@ pipeline {
         }
 
         stage('Ejecutar Contenedor Node.js') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
                 sh '''
                     # Detener y eliminar cualquier contenedor previo

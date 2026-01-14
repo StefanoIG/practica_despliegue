@@ -2,21 +2,27 @@ pipeline {
     agent any
 
     tools {
-        nodejs "Node25"
         dockerTool 'Dockertool'
     }
 
     stages {
         stage('Instalar dependencias') {
             steps {
-                sh 'npm install'
+                script {
+                    def dockerPath = tool name: 'Dockertool', type: 'org.jenkinsci.plugins.docker.commons.tools.DockerTool'
+                    env.PATH = "${dockerPath}:${env.PATH}"
+                }
+                sh '''
+                    docker run --rm -v $(pwd):/app -w /app node:20-alpine npm install
+                '''
             }
         }
 
         stage('Ejecutar tests') {
             steps {
-                sh 'chmod +x ./node_modules/.bin/jest'
-                sh 'npm test -- --ci --runInBand'
+                sh '''
+                    docker run --rm -v $(pwd):/app -w /app node:20-alpine npm test
+                '''
             }
         }
 
@@ -25,11 +31,6 @@ pipeline {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
-                script {
-                    // Usar la ruta completa de docker
-                    def dockerPath = tool name: 'Dockertool', type: 'org.jenkinsci.plugins.docker.commons.tools.DockerTool'
-                    env.PATH = "${dockerPath}:${env.PATH}"
-                }
                 sh 'docker --version'
                 sh 'docker build -t hola-mundo-node:latest .'
             }

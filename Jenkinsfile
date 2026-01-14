@@ -13,7 +13,7 @@ pipeline {
                     env.PATH = "${dockerPath}:${env.PATH}"
                 }
                 sh '''
-                    docker run --rm -v $(pwd):/app -w /app node:20-alpine npm install
+                    docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine npm install
                 '''
             }
         }
@@ -21,7 +21,7 @@ pipeline {
         stage('Ejecutar tests') {
             steps {
                 sh '''
-                    docker run --rm -v $(pwd):/app -w /app node:20-alpine npm test
+                    docker run --rm -v ${WORKSPACE}:/app -w /app node:20-alpine npm test
                 '''
             }
         }
